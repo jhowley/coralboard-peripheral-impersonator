@@ -1,0 +1,21 @@
+# Build output
+/build/
+/firmware/build/
+/tester/build/
+/tester/build-host/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Local evidence, logs and captures are deliberately not published
+/evidence/
+/logs/
+*.log
+*.jsonl
+
+# Editor / OS
+.DS_Store
+*.swp

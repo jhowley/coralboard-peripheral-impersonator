@@ -1,0 +1,1 @@
+{"label": "bring-up smoke", "ops": [{"w": "00"}, {"r": 1}, {"r": 3}, {"w": "01", "note": "pointer to config"}, {"r": 2}, {"w": "02aa"}, {"r": 1}]}
