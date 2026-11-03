@@ -109,7 +109,11 @@ header, so it cannot pass as hardware data.
 
 ## Wiring
 
-Three wires and exactly two resistors:
+[![Two-Pico wiring sheet with generic TESTER and SENSOR labels](docs/images/pico-i2c-wiring.png)](docs/images/pico-i2c-wiring.png)
+
+[Full-size PNG](docs/images/pico-i2c-wiring.png) · [Editable SVG](docs/images/pico-i2c-wiring.svg)
+
+Three board-to-board connections and exactly two pull-up resistors (plus wires to connect the pull-ups):
 
 | Signal | TESTER | SENSOR |
 | --- | --- | --- |

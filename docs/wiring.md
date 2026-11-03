@@ -10,6 +10,26 @@ This is the wiring used for the bench validation in
 No real target device is on this bus. Connecting the impersonator in place of a
 real device is a separate, supervised step.
 
+## Visual wiring sheet
+
+![Generic TESTER and SENSOR Pico pin locations, pull-ups and safety checklist](images/pico-i2c-wiring.png)
+
+[Full-resolution PNG](images/pico-i2c-wiring.png) · [Editable SVG](images/pico-i2c-wiring.svg)
+
+Both boards are shown component-side up, micro-USB sockets at the top.
+Labels identify roles, not individual boards; verify your own USB serials before
+labelling them. The drawing is a pin guide and electrical schematic, **not a
+breadboard-hole layout**. Colours are illustrative; follow the pin labels.
+
+To regenerate, install Pillow, DejaVu Sans fonts and Chromium in your development
+environment, then run `python3 scripts/render_wiring.py` from the repository root.
+These are optional drawing dependencies, not firmware or host runtime dependencies.
+The generator is [`scripts/draw_wiring.py`](../scripts/draw_wiring.py).
+
+Pinout references: [official Pico pinout](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf)
+and [Pico datasheet](https://pip.raspberrypi.com/documents/RP-008307-DS-pico-datasheet.pdf).
+Artwork and generator are covered by the repository's MIT license.
+
 ## Signals
 
 | Signal | TESTER (master) | SENSOR (target) | Notes |
