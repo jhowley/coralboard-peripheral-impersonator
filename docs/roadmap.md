@@ -89,9 +89,10 @@ Not yet verified on hardware: that a physical Tigard enumerates cleanly at
 the one bench test needed before this moves out of "proposal".
 
 Exit criteria before this moves out of "proposal": a schematic, a power/rail
-audit, a documented pin mapping, a `/home`-venv `pyftdi` import proof, and bench
-evidence that the Tigard enumerates and drives the bus without disturbing the
-Pico front end.
+audit, a documented pin mapping, a `/home`-venv `pyftdi` import proof (done
+2026-11-03: `pyftdi 0.57.2` in a `/home` virtual environment, `libusb1` backend
+loaded, USB enumeration answered), and bench evidence that the Tigard
+enumerates and drives the bus without disturbing the Pico front end.
 
 ## Proposed expansion — ESP32-C5 wireless endpoint
 
