@@ -54,9 +54,44 @@ What it is **not**:
 - **Not a built-in logic analyser.** Its analyser connector is a tap for an
   external instrument.
 
+### Integration path (assessed against the live board)
+
+Tigard is an FTDI FT2232H, so from the Coralboard it is an ordinary USB device
+(`0403:6010`). Driving its UART/SPI/I2C/JTAG happens over USB, and the clean
+route on this image is **userspace MPSSE via `pyftdi` over `libusb`**, not the
+kernel `ftdi_sio`/`usbserial` modules:
+
+- The Yocto image ships **no USB-serial kernel modules** (no `ftdi_sio`, no
+  `usbserial`, no `cdc_acm` — confirmed empty on the live board), so the kernel
+  will not grab Tigard's interfaces. That is an advantage, not a gap: `pyftdi`
+  gets exclusive MPSSE access without ever detaching a driver — the same
+  fail-closed behaviour `usb_link.py` already enforces for the Pico.
+- `libusb-1.0.so.0` **is** present, and `pyftdi` (plus its `pyserial`
+  dependency) is pure Python, so it installs into a `/home` virtual
+  environment with no compiler and no root-filesystem change.
+- This keeps Tigard a **seamless intermediary**: the Coralboard talks plain USB
+  to the Tigard, and the Tigard presents the target side at a selected 1.8–5.5 V,
+  moving voltage translation off the Pico entirely.
+
+```text
+Coralboard ──USB──► Tigard (FT2232H) ──UART / SPI / I2C / JTAG @ 1.8–5.5 V──► target
+  host + audit app        MPSSE engine             selected logic level
+```
+
+The audit transport layer would therefore have two interchangeable front ends
+behind one interface: **libusb-direct** (the Pico, already proven) and
+**pyftdi/MPSSE** (the Tigard). Tier-1 enumeration sees the Tigard itself as a
+device and the target through its buses, so a Tigard is both an object to
+fingerprint and a conduit to the device under test.
+
+Not yet verified on hardware: that a physical Tigard enumerates cleanly at
+`0403:6010` on this USB stack, and MPSSE timing on this aarch64 kernel. That is
+the one bench test needed before this moves out of "proposal".
+
 Exit criteria before this moves out of "proposal": a schematic, a power/rail
-audit, a documented pin mapping, and bench evidence that the companion can
-observe or recover the bus without disturbing it.
+audit, a documented pin mapping, a `/home`-venv `pyftdi` import proof, and bench
+evidence that the Tigard enumerates and drives the bus without disturbing the
+Pico front end.
 
 ## Proposed expansion — ESP32-C5 wireless endpoint
 
