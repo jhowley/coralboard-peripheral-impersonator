@@ -85,6 +85,67 @@ Hard constraints:
 Exit criteria: a separate firmware project, a threat model, a 3.3 V-only
 schematic, and bench proof that loss of the wireless link parks the target.
 
+## Proposed expansion — tiered device audit
+
+Plug an unfamiliar USB peripheral, camera, or device into the Coralboard's
+USB-A host port (or attach it to the Pico/Tigard front end) and let the host
+**enumerate → characterize → fuzz → extract → adapt**, recording every probe
+and its effect. Each tier feeds the next, and the loop pauses at every hazard
+rather than running unattended into a brick.
+
+| Tier | What it learns | Risk | Automatable? |
+| --- | --- | --- | --- |
+| 1. Enumerate | VID/PID, strings, serial, interfaces, endpoints, class codes, HID report descriptors, mass-storage probe (read-only), I²C address scan | very low | yes |
+| 2. Characterize | standard/vendor command set, reply shapes, how it answers | low | mostly, with timeouts |
+| 3. Fuzz / stress | crashes, hangs, parsing weaknesses | medium | yes, **with a power-cycle watchdog** |
+| 4. Firmware extract + analyse | actual code, strings, known CVEs, hardcoded keys | medium–high | extraction scriptable, interpretation not |
+| 5. Adapt | "given 1–4, probe here next" | varies | only inside a human-set envelope |
+
+The closed loop with **physical observation** is the part this project can
+offer that is not off-the-shelf: the camera/NPU watches LEDs, screens and
+physical state during each probe, so a crash, a reboot or an unexpected light
+pattern becomes a recorded data point — and the next round of probes is chosen
+from what was actually observed, not just from bus replies.
+
+### Implementation safety (assessed against the live board)
+
+Tier 1 (and most of tier 2) can be added **without touching any existing
+software**. Assessed 2026-11-03 against the running board:
+
+- **New code lives in a new `/home` directory** (e.g. `/home/coralboard-audit`),
+  alongside — never inside — the existing `/home/coralboard-bench` and
+  `/home/coralboard-tester` trees.
+- **No root-filesystem writes.** `/` is 98 % full (33.6 MB free); `/home` has
+  46.8 GB free. Any Python dependency goes in a `/home` virtual environment,
+  not `pip install` into `/usr`.
+- **No new driver or kernel change.** USB enumeration reads
+  `/sys/bus/usb/devices` and `lsusb`, both already present and working. The
+  userspace `libusb-1.0.so.0` path already proven by `usb_link.py` (via
+  `ctypes`) is reused — `pyusb` is not installed and is not required.
+- **No Pico firmware change, no M52 touch.** The Picos and the
+  `rpmsg_ctrl`/M52 path are untouched; enumeration is passive host-side USB.
+- **No network change.** The Wi-Fi link and ADB path are left exactly as they
+  are.
+
+The one shared resource is the single USB-A host port: an audit target is
+plugged into the same hub as the bench Picos, which is a physical coexistence,
+not a software conflict — enumeration does not claim or reconfigure anything.
+
+Deeper tiers are a different cost class and are gated separately: they need
+aarch64-compiled tooling or a `/home` venv, physical wiring for SPI/JTAG, and a
+safety watchdog with a known-good rollback before fuzzing can run unattended.
+
+### Exit criteria for tier 1
+
+- A separate `coralboard-audit` module that enumerates a plugged device and
+  emits a fingerprint (descriptors, classes, strings, endpoints) without
+  claiming any interface or detaching a driver.
+- Evidence that enumeration changes nothing else on the bus: the bench Picos
+  still enumerate, and a before/after `lsusb`/sysfs snapshot is identical
+  except for the newly plugged device.
+- The fingerprint is recorded through the existing evidence backbone so a
+  probe and its result are replayable.
+
 ## Longer term — exploratory only
 
 - **SPI and I3C impersonation.** Both need new profile schemas and framing
